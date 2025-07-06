@@ -1,0 +1,49 @@
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# dotenv environment variables
+.env
+.env.local
+.env.*.local
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# VS Code settings (optional)
+.vscode/
+
+# Output folders (if any build process)
+dist/
+build/
+
+# Uploads (if storing local uploads)
+uploads/
+tmp/
+public/uploads/
+
+# Coverage reports
+coverage/
+
+# MongoDB dump files
+*.gz
+dump/
+
+# Socket.IO debug logs
+*.pid
+
+# Optional: pm2 logs
+pids/
+*.pid
+
+# Optional: production keys or SSL certs
+cert/
+*.pem
+*.key
