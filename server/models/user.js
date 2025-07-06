@@ -28,7 +28,9 @@ const userSchema = new mongoose.Schema({
             ref: 'NewsArticle'
         }
     ],
-    preferences: [String]
+    preferences: [String],
+    resetToken: String,
+    resetTokenExpiry: Date
 }, {
     timestamps: true 
 });
