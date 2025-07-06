@@ -1,85 +1,93 @@
-import crypto from "crypto";
-import bcrypt from "bcryptjs";
-import transporter from "../config/emailConfig.js";
-import User from "../models/User.js";
+import {
+  registerUser,
+  verifyEmail,
+  loginUser,
+  getUserById,
+  forgotPassword,
+  resetPassword,
+} from '../services/authService.js';
 
-export const forgotPassword = async (req, res) => {
-  const { email } = req.body;
-
+// Register
+export const register = async (req, res) => {
   try {
-    const user = await User.findOne({ email });
-    if (!user)
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-
-    const token = crypto.randomBytes(32).toString("hex");
-    const expiry = Date.now() + 15 * 60 * 1000; // 15 minutes
-
-    user.resetToken = token;
-    user.resetTokenExpiry = expiry;
-    await user.save();
-
-    const resetLink = `${process.env.CLIENT_URL}/reset-password/${token}`;
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: user.email,
-      subject: "Password Reset - The Daily Vibe",
-      html: `
-        <h3>Hello ${user.name},</h3>
-        <p>You requested to reset your password. Click the link below within 15 minutes:</p>
-        <a href="${resetLink}">${resetLink}</a>
-        <p>If you did not request this, please ignore the email.</p>
-      `,
-    };
-    await transporter.sendMail(mailOptions);
-
-    res.status(200).json({
-      success: true,
-      message: "Password reset link sent to your email",
+    const user = await registerUser(req.body);
+    res.status(201).json({
+      message: 'Registered. Check your email.',
+      userId: user._id,
+      verificationToken:user.verificationToken,
     });
-  } catch (error) {
-    console.error("Error in forgotPassword:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to send password reset email",
-      error: error.message,
-    });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
   }
 };
 
-export const resetPassword = async (req, res) => {
-  const { token } = req.params;
-  const { newPassword } = req.body;
-
+// Verify Email
+export const verify = async (req, res) => {
   try {
-    const user = await User.findOne({
-      resetToken: token,
-      resetTokenExpiry: { $gt: Date.now() },
-    });
+    // await verifyEmail(req.query.token);
+    await verifyEmail(req.body.token);
+    res.status(200).json({ message: 'Email verified successfully.' });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
 
-    if (!user)
-      return res.status(400).json({
-        success: false,
-        message: "Token expired. Please request again.",
-      });
-
-    user.password = await bcrypt.hash(newPassword, 10);
-    user.resetToken = null;
-    user.resetTokenExpiry = null;
-    await user.save();
-
+// Login
+export const login = async (req, res) => {
+  try {
+    const { user, token } = await loginUser(req.body);
     res.status(200).json({
-      success: true,
-      message: "Password reset successfully",
+      message: 'Login successful',
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      },
     });
-  } catch (error) {
-    console.error("Error in resetPassword:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to reset password",
-      error: error.message,
+  } catch (err) {
+    res.status(401).json({ message: err.message });
+  }
+};
+
+// Logout
+export const logout = (req, res) => {
+  res.status(200).json({ message: 'Logged out successfully.' });
+};
+
+// Get Me
+export const getMe = async (req, res) => {
+  try {
+    const user = await getUserById(req.user.id);
+    res.status(200).json(user);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
+// Forgot Password
+export const forgot = async (req, res) => {
+  try {
+   const verificationToken = await forgotPassword(req.body.email);
+    res.status(200).json({
+      message: 'Reset email sent.',
+      verificationToken,
     });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+// Reset Password
+export const reset = async (req, res) => {
+  try {
+    // await resetPassword(req.query.token, req.query.id, req.body.password);
+    await resetPassword(req.body.token, req.body.id, req.body.password);
+    res.status(200).json({
+      message: 'Password reset successfully.'
+    });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
   }
 };

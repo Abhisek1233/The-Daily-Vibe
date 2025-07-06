@@ -28,13 +28,28 @@ const userSchema = new mongoose.Schema({
             ref: 'NewsArticle'
         }
     ],
-    preferences: [String],
-    resetToken: String,
-    resetTokenExpiry: Date
+    preferences: [{
+        type: String,
+    }],
+    verificationToken: {
+        type: String,
+    },
+    verificationExpire: {
+        type: Date,
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    resetPasswordToken: {
+        type:String,
+    },
+    resetPasswordExpire: {
+        type: Date,
+    }
 }, {
-    timestamps: true 
+    timestamps: true
 });
-
 
 
 export default mongoose.model("User", userSchema);
